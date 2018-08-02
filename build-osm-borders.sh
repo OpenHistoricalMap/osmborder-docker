@@ -1,28 +1,21 @@
 #!/bin/bash
 set -e -u
 
-URL="${URL:-http://ftp.osuosl.org/pub/openstreetmap/pbf/planet-latest.osm.pbf}"
-STORAGE_DIR="${STORAGE_DIR:-.}"
-OSM_FILE=$STORAGE_DIR/`basename $URL`
-OUTPUT_FILE="${OUTPUT_FILE:-$STORAGE_DIR/osmborder_lines.csv}"
+# OHM planets take hours, so accept a one-day delay
+DATE=`date +'%Y-%m-%d' --date='1 day ago'`
+URL="http://dump.openhistoricalmap.org/planet/ohm_planet_$DATE.osm.bz2"
 
-if [[ ! -e ${OSM_FILE} ]]; then
-    echo "Downloading planet-latest.osm.pbf to $OSM_FILE"
-    wget -nv $URL.md5 -O $OSM_FILE.md5
-    wget -nv $URL -O $OSM_FILE
+STORAGE_DIR="/import"
+OSM_FILE="$STORAGE_DIR/ohm_planet.osm.bz2"
+OSM_FILTERED_FILE="$STORAGE_DIR/filtered.osm.pbf"
+OUTPUT_FILE="$STORAGE_DIR/osmborder_lines.csv"
+
+echo "Downloading `basename $URL` to `basename $OSM_FILE`"
+wget -nv $URL -O $OSM_FILE
+if [ $? != 0 ]; then
+    echo "ERROR: Download failed"
+    exit
 fi
 
-pushd $STORAGE_DIR
-md5sum -c $OSM_FILE.md5
-popd
-
-echo "loading osm file with date '`osmium fileinfo -g 'header.option.osmosis_replication_timestamp' $OSM_FILE`'"
-echo "outputing to $OUTPUT_FILE"
-
-osmborder_filter -o $STORAGE_DIR/filtered.osm.pbf $OSM_FILE
-osmborder -o $OUTPUT_FILE $STORAGE_DIR/filtered.osm.pbf
-
-if [[ ! -z "$S3_LOCATION" ]]; then
-    echo "Uploading to s3"
-    aws s3 cp $OUTPUT_FILE $S3_LOCATION
-fi
+osmborder_filter -o $OSM_FILTERED_FILE $OSM_FILE
+osmborder -o $OUTPUT_FILE $OSM_FILTERED_FILE
