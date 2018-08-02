@@ -25,4 +25,4 @@ osmborder_filter -o $OSM_FILTERED_FILE $OSM_FILE
 echo "Generating CSV $OUTPUT_FILE"
 osmborder -o $OUTPUT_FILE $OSM_FILTERED_FILE
 
-echo "Done generating `$OUTPUT_FILE`"
+echo "Done generating $OUTPUT_FILE"
