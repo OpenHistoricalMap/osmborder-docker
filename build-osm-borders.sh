@@ -10,6 +10,8 @@ OSM_FILE="$STORAGE_DIR/ohm_planet.osm.bz2"
 OSM_FILTERED_FILE="$STORAGE_DIR/filtered.osm.pbf"
 OUTPUT_FILE="$STORAGE_DIR/osmborder_lines.csv"
 
+rm -f $OUTPUT_FILE $OSM_FILTERED_FILE
+
 echo "Downloading `basename $URL` to `basename $OSM_FILE`"
 wget -nv $URL -O $OSM_FILE
 if [ $? != 0 ]; then
